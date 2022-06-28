@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Doggos</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <!--
+      Need a visual blank slate?
+      Remove all code in `styles.css`!
+    -->
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.8.4/firebase-app.js';
+      import {
+        getFirestore,
+        query,
+        where,
+        orderBy,
+        onSnapshot,
+        collection,
+        getDocs,
+        updateDoc,
+        addDoc,
+        serverTimestamp,
+        enableIndexedDbPersistence,
+      } from 'https://www.gstatic.com/firebasejs/9.8.4/firebase-firestore-lite.js';
+      import { createApp, reactive } from 'https://unpkg.com/petite-vue?module';
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: 'AIzaSyC_cIxBna3Asel45IRSUYSpFRPgJonzR4I',
+        authDomain: 'doggos-wl.firebaseapp.com',
+        projectId: 'doggos-wl',
+        storageBucket: 'doggos-wl.appspot.com',
+        messagingSenderId: '242959837247',
+        appId: '1:242959837247:web:ebbb5d0e3c59ac6ab8f08a',
+      };
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+
+      const db = getFirestore(app);
+
+      let lastWalk = null;
+
+      //enableIndexedDbPersistence(db);
+
+      //const urlParams = new URLSearchParams(queryString);
+
+      const data = reactive({
+        doggos: [],
+        walks: [],
+        get isOnWalk() {
+          return this.walks.length > 0 && this.walks[0].finish == undefined;
+        },
+      });
+      createApp({
+        data,
+        goOnWalk() {
+          addDoc(collection(db, 'walks'), {
+            who: 'Raksha',
+            doggo: data.doggos[0].name,
+            start: serverTimestamp(),
+          });
+        },
+        returnFromWalk() {
+          updateDoc(lastWalk, {
+            finish: serverTimestamp(),
+            doggo: data.walks[0].doggo,
+          });
+        },
+        dateFormatter: new Intl.DateTimeFormat(undefined, {
+          dateStyle: 'short',
+        }),
+        timeFormatter: new Intl.DateTimeFormat(undefined, {
+          timeStyle: 'short',
+        }),
+      }).mount();
+
+      {
+        const q = query(collection(db, 'doggos'), orderBy('name'));
+        onSnapshot(q, (querySnapshot) => {
+          data.doggos = querySnapshot.docs.map((d) => d.data());
+        });
+      }
+      {
+        const q = query(collection(db, 'walks'), orderBy('start', 'desc'));
+        onSnapshot(q, (querySnapshot) => {
+          data.walks = querySnapshot.docs.map((d) => d.data());
+          if (querySnapshot.docs.length > 0)
+            lastWalk = querySnapshot.docs[0].ref;
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <nav>
+      <a href="/" aria-current="page">Home</a>
+      <a href="/page2.html">Other page</a>
+    </nav>
+    <main>
+      <h1>Home page</h1>
+    </main>
+    <div v-scope>
+      <div v-if="!data.isOnWalk">
+        <button @click="goOnWalk">Go For a Walk</button>
+      </div>
+      <table>
+        <tr v-for="w in data.walks">
+          <td>{{dateFormatter.format(w.start.toDate())}}</td>
+          <!--<td>{{w.who}}</td>-->
+          <td>{{timeFormatter.format(w.start.toDate())}}</td>
+          <td>
+            <span v-if="w.finish">
+              {{timeFormatter.format(w.finish.toDate())}}
+            </span>
+            <span v-if="w.finish == undefined">
+              <button @click="returnFromWalk">Return</button>
+            </span>
+          </td>
+          <td>
+            <span v-if="w.finish"> {{w.doggo}} </span>
+            <span v-if="w.finish == undefined">
+              <select v-model="w.doggo">
+                <option v-for="d in data.doggos">{{d.name}}</option>
+              </select>
+            </span>
+          </td>
+        </tr>
+      </table>
+      <div v-for="d in data.doggos">{{d.name}}</div>
+    </div>
+  </body>
+</html>
