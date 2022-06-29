@@ -26,9 +26,11 @@
         orderBy,
         onSnapshot,
         collection,
+        doc,
         getDocs,
         updateDoc,
         addDoc,
+        setDoc,
         deleteDoc,
         serverTimestamp,
         enableIndexedDbPersistence,
@@ -56,7 +58,7 @@
 
       //const urlParams = new URLSearchParams(queryString);
 
-      var who = 'Raksha';
+      var who = false;
       var path = location.pathname.split('/');
       if (path.length > 1 && path[1].length > 0) who = path[1];
 
@@ -70,17 +72,22 @@
       createApp({
         data,
         who: who,
-        goOnWalk() {
+        user: '',
+        goOnWalk(doggo) {
           addDoc(collection(db, 'walks'), {
             who: who,
-            doggo: data.doggos[0].name,
+            doggo: doggo,
             start: serverTimestamp(),
           });
         },
-        returnFromWalk() {
+        returnFromWalk(doggo) {
+          setDoc(doc(db, 'doggos', doggo), {
+            name: doggo,
+            walked: serverTimestamp(),
+          });
           updateDoc(lastWalk, {
             finish: serverTimestamp(),
-            doggo: data.walks[0].doggo,
+            doggo: doggo,
           });
         },
         cancelWalk() {
@@ -101,11 +108,13 @@
         });
       }
       {
-        const q = query(
-          collection(db, 'walks'),
-          where('who', '==', who),
-          orderBy('start', 'desc')
-        );
+        const q = who
+          ? query(
+              collection(db, 'walks'),
+              where('who', '==', who),
+              orderBy('start', 'desc')
+            )
+          : query(collection(db, 'walks'), orderBy('start', 'desc'));
         onSnapshot(q, (querySnapshot) => {
           data.walks = querySnapshot.docs.map((d) => d.data());
           if (querySnapshot.docs.length > 0)
@@ -116,27 +125,41 @@
   </head>
   <body>
     <div class="container" v-scope>
-      <h1>Dog Walks {{who}}</h1>
-      <div v-if="!data.isOnWalk">
-        <button class="btn btn-primary" @click="goOnWalk">Go For a Walk</button>
+      <h1>Dog Walks {{who||''}}</h1>
+      <div class="input-group" v-if="!who && false">
+        <input class="form-control" v-model="user" placeholder="Who are you?" />
+        <button class="btn btn-primary" @click="login(user)">Login</button>
+      </div>
+      <div v-if="!data.isOnWalk && who">
+        <span v-for="d in data.doggos" style="margin-left: 2px"
+          ><button class="btn btn-primary" @click="goOnWalk(d.name)">
+            {{d.name}}
+          </button></span
+        >
+        <button class="btn btn-warning" @click="goOnWalk('')">*new*</button>
       </div>
       <table class="table">
         <tr>
           <th>Date</th>
+          <th v-if="!who">Who</th>
           <th>Start</th>
           <th>Finish</th>
           <th>Doggo</th>
         </tr>
-        <tr v-for="w in data.walks">
-          <td>{{dateFormatter.format(w.start.toDate())}}</td>
-          <!--<td>{{w.who}}</td>-->
-          <td>{{timeFormatter.format(w.start.toDate())}}</td>
+        <tr v-for="w in data.walks" :class="{ 'table-warning': !w.finish }">
+          <td>{{w.start ? dateFormatter.format(w.start.toDate()) : ''}}</td>
+          <td v-if="!who">{{w.who}}</td>
+          <td>{{w.start ? timeFormatter.format(w.start.toDate()) : ''}}</td>
           <td>
-            <span v-if="w.finish != undefined">
-              {{timeFormatter.format(w.finish.toDate())}}
+            <span v-if="w.finish">
+              {{w.finish ? timeFormatter.format(w.finish.toDate()) : ''}}
             </span>
-            <span v-if="w.finish == undefined">
-              <button class="btn btn-primary" @click="returnFromWalk">
+            <span v-else>
+              <button
+                class="btn btn-primary"
+                :class="{disabled: w.doggo == ''}"
+                @click="returnFromWalk(w.doggo)"
+              >
                 Return
               </button>
               <button class="btn btn-danger btn-sm" @click="cancelWalk">
@@ -146,15 +169,18 @@
           </td>
           <td>
             <span v-if="w.finish"> {{w.doggo}} </span>
-            <span v-if="w.finish == undefined">
-              <select class="form-select" v-model="w.doggo">
+            <span v-else>
+              <!--<select class="form-select" v-model="w.doggo">
                 <option v-for="d in data.doggos">{{d.name}}</option>
-              </select>
+              </select>-->
+              <input class="form-control" v-model="w.doggo" />
             </span>
           </td>
         </tr>
       </table>
+      <!--
       <div v-for="d in data.doggos">{{d.name}}</div>
+      -->
     </div>
   </body>
 </html>
