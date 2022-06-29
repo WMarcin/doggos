@@ -56,6 +56,10 @@
 
       //const urlParams = new URLSearchParams(queryString);
 
+      var who = 'Raksha';
+      var path = location.pathname.split('/');
+      if (path.length > 1 && path[1].length > 0) who = path[1];
+
       const data = reactive({
         doggos: [],
         walks: [],
@@ -65,9 +69,10 @@
       });
       createApp({
         data,
+        who: who,
         goOnWalk() {
           addDoc(collection(db, 'walks'), {
-            who: 'Raksha',
+            who: who,
             doggo: data.doggos[0].name,
             start: serverTimestamp(),
           });
@@ -96,7 +101,11 @@
         });
       }
       {
-        const q = query(collection(db, 'walks'), orderBy('start', 'desc'));
+        const q = query(
+          collection(db, 'walks'),
+          where('who', '==', who),
+          orderBy('start', 'desc')
+        );
         onSnapshot(q, (querySnapshot) => {
           data.walks = querySnapshot.docs.map((d) => d.data());
           if (querySnapshot.docs.length > 0)
@@ -107,7 +116,7 @@
   </head>
   <body>
     <div class="container" v-scope>
-      <h1>Dog Walks</h1>
+      <h1>Dog Walks {{who}}</h1>
       <div v-if="!data.isOnWalk">
         <button class="btn btn-primary" @click="goOnWalk">Go For a Walk</button>
       </div>
