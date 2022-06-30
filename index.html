@@ -62,8 +62,7 @@
       var path = location.pathname.split('/');
       if (path.length > 1 && path[1].length > 0) {
         who = path[1];
-        if (who.length > 1)
-          who = who.charAt(0).toUpperCase() + who.slice(1);
+        if (who.length > 1) who = who.charAt(0).toUpperCase() + who.slice(1);
       }
 
       const data = reactive({
@@ -140,7 +139,7 @@
             {{d.name}}
           </button></span
         >
-        <button class="btn btn-warning" @click="goOnWalk('')">*new*</button>
+        <button class="btn btn-warning" @click="goOnWalk('')">*other*</button>
       </div>
       <table class="table">
         <tr>
