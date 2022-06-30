@@ -157,7 +157,7 @@
             <span v-if="w.finish">
               {{w.finish ? timeFormatter.format(w.finish.toDate()) : ''}}
             </span>
-            <span v-else>
+            <span v-else-if="who">
               <button
                 class="btn btn-primary"
                 :class="{disabled: w.doggo == ''}"
@@ -171,7 +171,7 @@
             </span>
           </td>
           <td>
-            <span v-if="w.finish"> {{w.doggo}} </span>
+            <span v-if="w.finish || !who"> {{w.doggo}} </span>
             <span v-else>
               <!--<select class="form-select" v-model="w.doggo">
                 <option v-for="d in data.doggos">{{d.name}}</option>
