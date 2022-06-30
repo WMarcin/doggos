@@ -128,7 +128,7 @@
   </head>
   <body>
     <div class="container" v-scope v-cloak>
-      <h1>Dog Walks {{who||''}}</h1>
+      <h1>🐕 Dog Walks 🐕‍🦺 {{who||''}}</h1>
       <div class="input-group" v-if="!who && false">
         <input class="form-control" v-model="user" placeholder="Who are you?" />
         <button class="btn btn-primary" @click="login(user)">Login</button>
@@ -147,7 +147,7 @@
           <th v-if="!who">Who</th>
           <th>Start</th>
           <th>Finish</th>
-          <th>Doggo</th>
+          <th>Doggo 🐶</th>
         </tr>
         <tr v-for="w in data.walks" :class="{ 'table-warning': !w.finish }">
           <td>{{w.start ? dateFormatter.format(w.start.toDate()) : ''}}</td>
