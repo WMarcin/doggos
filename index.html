@@ -124,7 +124,7 @@
     </script>
   </head>
   <body>
-    <div class="container" v-scope>
+    <div class="container" v-scope v-cloak>
       <h1>Dog Walks {{who||''}}</h1>
       <div class="input-group" v-if="!who && false">
         <input class="form-control" v-model="user" placeholder="Who are you?" />
