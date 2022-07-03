@@ -33,6 +33,7 @@
         setDoc,
         deleteDoc,
         serverTimestamp,
+        Timestamp,
         enableIndexedDbPersistence,
       } from 'https://www.gstatic.com/firebasejs/9.8.4/firebase-firestore-lite.js';
       import { createApp, reactive } from 'https://unpkg.com/petite-vue?module';
@@ -58,7 +59,11 @@
 
       //const urlParams = new URLSearchParams(queryString);
 
+      /*
       var who = false;
+      /*/
+      var who = 'Raksha';
+      //*/
       var path = location.pathname.split('/');
       if (path.length > 1 && path[1].length > 0) {
         who = path[1];
