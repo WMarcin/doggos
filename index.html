@@ -80,16 +80,16 @@
           addDoc(collection(db, 'walks'), {
             who: who,
             doggo: doggo,
-            start: serverTimestamp(),
+            start: Timestamp.now(),
           });
         },
         returnFromWalk(doggo) {
           setDoc(doc(db, 'doggos', doggo), {
             name: doggo,
-            walked: serverTimestamp(),
+            walked: Timestamp.now(),
           });
           updateDoc(lastWalk, {
-            finish: serverTimestamp(),
+            finish: Timestamp.now(),
             doggo: doggo,
           });
         },
