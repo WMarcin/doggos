@@ -205,35 +205,41 @@
             <button class="btn btn-info btn-sm" v-if="!w._edit && who && w.finish && isRecent(w)" @click="w._edit = true">
               ...
             </button>
-            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="restore(w)">
-              cancel
-            </button>
-            <button class="btn btn-success btn-sm" v-if="w._edit" @click="save(w)">
-              save
-            </button>
-            <button class="btn btn-danger btn-sm" v-if="w._edit" @click="deleteWalk(w)">
-              delete
-            </button>
+            <div v-if="w._edit">
+              <button class="btn btn-warning btn-sm" @click="restore(w)">
+                cancel
+              </button>
+              <button class="btn btn-success btn-sm" @click="save(w)">
+                save
+              </button>
+              <button class="btn btn-danger btn-sm" @click="deleteWalk(w)">
+                delete
+              </button>
+            </div>
           </td>
           <td v-if="!who">{{w.who}}</td>
           <td>
-            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modStart(w, -1)">
-              -
-            </button>
             {{w.start ? timeFormatter.format(w.start.toDate()) : ''}}
-            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modStart(w, 1)">
-              +
-            </button>
+            <div v-if="w._edit">
+              <button class="btn btn-warning btn-sm" @click="modStart(w, -1)">
+                -
+              </button>
+              <button class="btn btn-warning btn-sm" @click="modStart(w, 1)">
+                +
+              </button>
+            </div>
           </td>
           <td>
             <span v-if="w.finish">
-              <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modFinish(w, -1)">
-                -
-              </button>
               {{w.finish ? timeFormatter.format(w.finish.toDate()) : ''}}
-              <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modFinish(w, 1)">
-                +
-              </button>
+              <div v-if="w._edit">
+                <button class="btn btn-warning btn-sm" @click="modFinish(w, -1)">
+                  -
+                </button>
+                <button class="btn btn-warning btn-sm" @click="modFinish(w, 1)">
+                  +
+                </button>
+              </div>
             </span>
             <span v-else-if="who">
               <button
