@@ -57,6 +57,14 @@
 
       enableIndexedDbPersistence(db);
 
+      function dataWithID(d)
+      {
+        let obj = d.data();
+        obj._bak = Object.assign({}, obj)
+        obj._id = d.id;
+        return obj;
+      }
+
       //const urlParams = new URLSearchParams(queryString);
 
       //*
@@ -98,13 +106,51 @@
             doggo: doggo,
           });
         },
+        modStart(w, minutes)
+        {
+          w.start = new Timestamp(w.start.seconds + minutes * 60, 0);
+          /*updateDoc(doc(db, 'walks', w._id), {
+            start: new Timestamp(w.start.seconds + minutes * 60, 0),
+          });*/
+        },
+        modFinish(w, minutes)
+        {
+          w.finish = new Timestamp(w.finish.seconds + minutes * 60, 0);
+          /*updateDoc(doc(db, 'walks', w._id), {
+            finish: new Timestamp(w.finish.seconds + minutes * 60, 0),
+          });*/
+        },
+        save(w)
+        {
+          w._edit = false;
+          updateDoc(doc(db, 'walks', w._id), {
+            start: w.start,
+            finish: w.finish,
+            doggo: w.doggo,
+          });
+        },
+        restore(w)
+        {
+          //Object.assign(w, w._bak);
+          w.start = w._bak.start;
+          w.finish = w._bak.finish;
+          w.doggo = w._bak.doggo;
+          w._edit = false;
+        },
         cancelWalk() {
           deleteDoc(lastWalk);
         },
-        dateFormatter: new Intl.DateTimeFormat(undefined, {
+        deleteWalk(w) {
+          deleteDoc(doc(db, 'walks', w._id));
+        },
+        isRecent(w)
+        {
+          return w.start.seconds > Timestamp.now().seconds - 60 * 60 * 4;
+        },
+        dateFormatter: new Intl.DateTimeFormat('en-GB', {
           dateStyle: 'short',
         }),
-        timeFormatter: new Intl.DateTimeFormat(undefined, {
+        timeFormatter: new Intl.DateTimeFormat('en-GB', {
           timeStyle: 'short',
         }),
       }).mount();
@@ -124,7 +170,7 @@
             )
           : query(collection(db, 'walks'), orderBy('start', 'desc'));
         onSnapshot(q, (querySnapshot) => {
-          data.walks = querySnapshot.docs.map((d) => d.data());
+          data.walks = querySnapshot.docs.map((d) => dataWithID(d));
           if (querySnapshot.docs.length > 0)
             lastWalk = querySnapshot.docs[0].ref;
         });
@@ -155,12 +201,39 @@
           <th>Doggo 🐶</th>
         </tr>
         <tr v-for="w in data.walks" :class="{ 'table-warning': !w.finish }">
-          <td>{{w.start ? dateFormatter.format(w.start.toDate()) : ''}}</td>
+          <td>{{w.start ? dateFormatter.format(w.start.toDate()) : ''}}
+            <button class="btn btn-info btn-sm" v-if="!w._edit && who && w.finish && isRecent(w)" @click="w._edit = true">
+              ...
+            </button>
+            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="restore(w)">
+              cancel
+            </button>
+            <button class="btn btn-success btn-sm" v-if="w._edit" @click="save(w)">
+              save
+            </button>
+            <button class="btn btn-danger btn-sm" v-if="w._edit" @click="deleteWalk(w)">
+              delete
+            </button>
+          </td>
           <td v-if="!who">{{w.who}}</td>
-          <td>{{w.start ? timeFormatter.format(w.start.toDate()) : ''}}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modStart(w, -1)">
+              -
+            </button>
+            {{w.start ? timeFormatter.format(w.start.toDate()) : ''}}
+            <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modStart(w, 1)">
+              +
+            </button>
+          </td>
           <td>
             <span v-if="w.finish">
+              <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modFinish(w, -1)">
+                -
+              </button>
               {{w.finish ? timeFormatter.format(w.finish.toDate()) : ''}}
+              <button class="btn btn-warning btn-sm" v-if="w._edit" @click="modFinish(w, 1)">
+                +
+              </button>
             </span>
             <span v-else-if="who">
               <button
